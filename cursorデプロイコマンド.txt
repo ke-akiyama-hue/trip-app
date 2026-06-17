@@ -1,0 +1,68 @@
+【初回セットアップ（GASへ初回アップロード）】
+
+■ 作業ディレクトリ
+cd "\\Hinkan-NAS\Hinkan-NAS\製造課（削除禁止）\GASアプリ\出張申請"
+
+■ 1. clasp ログイン（未ログインの場合のみ）
+clasp login
+
+■ 2. .clasp.json の scriptId を設定する（どちらか一方）
+
+【方法A】clasp で新規スプレッドシート＋GAS を作成（推奨）
+  ※ .clasp.json が既にある場合は先に退避する（空の scriptId があると create も push も失敗する）
+  Rename-Item .clasp.json .clasp.json.bak
+  clasp create --type sheets --title "出張申請"
+  → 新しいスプレッドシートと GAS が作成され、scriptId が .clasp.json に自動設定される
+
+【方法B】既存スプレッドシートに紐づける
+  1. Google スプレッドシートを新規作成
+  2. 拡張機能 → Apps Script を開く
+  3. URL から Script ID をコピー
+     https://script.google.com/home/projects/【ここがScript ID】/edit
+  4. .clasp.json の "scriptId" に貼り付けて保存
+
+■ 3. scriptId の確認（空欄だと push できない）
+type .clasp.json
+  → "scriptId": "" のままなら設定が未完了。上記 2 をやり直す
+
+■ 4. 初回アップロード
+clasp push
+  → 成功例: Pushed 9 files at ...
+
+■ 5. スプレッドシート側の初期化
+  メニュー「出張申請」→「全シート＋ヘッダーを一括作成」
+
+■ 6. Webアプリとしてデプロイ
+clasp deploy --description "初回デプロイ"
+  → 表示されたデプロイ URL をブックマーク
+
+■ 7. ワークフロー設定との連携（Phase 1）
+  1. 先に「GASアプリ/ワークフロー設定」を clasp create → push → 初期化 → デプロイ
+  2. ワークフロー設定ブック ID → 設定.js の WORKFLOW_SS_ID に設定
+  3. clasp push → 出張申請シートで「全シート＋ヘッダーを一括作成」（経路列が追加される）
+  4. ワークフローブックにデプロイユーザーの閲覧権限を付与
+
+■ 8. 出張旅費精算との連携
+  作成したスプレッドシート ID を、出張旅費精算の 設定.js → TRIP_APP_SS_ID に設定
+
+【初回アップロードでエラーが出た場合】
+
+・Project settings not found.
+  → .clasp.json の scriptId が空。type .clasp.json で確認し、方法A または B で設定する
+
+・Project file already exists.
+  → .clasp.json が既にある。scriptId が空なら Rename-Item で退避してから clasp create する
+  → 既に scriptId が入っているなら create は不要。clasp push のみ実行
+
+・clasp deploy の Invalid deployment ID
+  → デプロイ ID に [ ] 角括弧を付けない（角括弧は説明用の記号）
+
+【出張旅費精算との連携】
+・出張申請ID: BT-yyyyMMdd-xxxx（このアプリ）
+・精算ID: TR-yyyyMMdd-xxxx（出張旅費精算アプリ）
+・承認済 & 未精算 の出張申請のみ、旅費精算で選択可能
+
+【更新】
+cd "\\Hinkan-NAS\Hinkan-NAS\製造課（削除禁止）\GASアプリ\出張申請"
+clasp push
+clasp deploy -i AKfycbzP0DSyAifSJXbyAt-985bVm3ZwOZHoH8P45568W97CC7_mC37n4fSSSI_h5-txwMETAA -d "変更内容"
