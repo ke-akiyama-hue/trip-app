@@ -24,6 +24,19 @@ var TRIP_STATUS = {
   CANCELLED: '取消'
 };
 
+/** 出張日程を反映する共通GoogleカレンダーID（未設定なら共通カレンダー同期なし） */
+var TRIP_SHARED_CALENDAR_ID = 'c_917c7ef0199eb4164e5f167f695fd87c3fcf2941502940abdc59eef9c216180e@group.calendar.google.com';
+
+/**
+ * 申請者の事業所ごとに反映するGoogleカレンダーID。
+ * 社員マスタの「事業所」列の値とキーを一致させる。
+ * 例: { '本社': 'xxxxx@group.calendar.google.com', '大阪': 'yyyyy@group.calendar.google.com' }
+ */
+var TRIP_OFFICE_CALENDAR_IDS = {
+  '大阪工場': 'c_7307233b51a453a13eeb28ef8cdcd92c41e7e6d76ed09ae6e3a912ab22ff4aec@group.calendar.google.com',
+  '大阪営業所': 'c_26c0d7b1d33ebeab52763026e0f7044b0bda669fdee00ad8642804ab4cc8b6be@group.calendar.google.com'
+};
+
 /** 精算連携ステータス（出張旅費精算アプリが更新） */
 var SETTLEMENT_STATUS = {
   NONE: '未精算',
@@ -93,7 +106,9 @@ function generateTripRequestId_() {
 
 function getCurrentUserEmail_() {
   try {
-    var email = Session.getActiveUser().getEmail() || Session.getEffectiveUser().getEmail() || '';
+    // executeAs=USER_DEPLOYING でも、申請者・承認者の判定はログインユーザーで行う。
+    // EffectiveUser はデプロイ実行者になるため、ここでは使わない。
+    var email = Session.getActiveUser().getEmail() || '';
     return String(email).trim().toLowerCase();
   } catch (e) {
     return '';

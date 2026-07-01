@@ -65,4 +65,8 @@ clasp deploy --description "初回デプロイ"
 【更新】
 cd "\\Hinkan-NAS\Hinkan-NAS\製造課（削除禁止）\GASアプリ\出張申請"
 clasp push
-clasp deploy -i AKfycbzP0DSyAifSJXbyAt-985bVm3ZwOZHoH8P45568W97CC7_mC37n4fSSSI_h5-txwMETAA -d "変更内容"
+clasp deploy -i AKfycbzbZOY2xddntqnXA6J6HERV2zM8GmPxepTK09Od6Gr4lLjOxqbMKK3QN1hIHL-Fm9dXpg -d "変更内容"
+
+【本番デプロイ情報】
+デプロイID: AKfycbzbZOY2xddntqnXA6J6HERV2zM8GmPxepTK09Od6Gr4lLjOxqbMKK3QN1hIHL-Fm9dXpg（@21）
+WebアプリURL: https://script.google.com/macros/s/AKfycbzbZOY2xddntqnXA6J6HERV2zM8GmPxepTK09Od6Gr4lLjOxqbMKK3QN1hIHL-Fm9dXpg/exec

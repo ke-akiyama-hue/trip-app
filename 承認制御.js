@@ -38,11 +38,12 @@ function updateTripStatus_(tripRequestId, newStatus, comment, rejectTargetChoice
       trip.currentStepName = nextStep.stepName;
       trip.approverEmail = nextStep.approverEmail;
       trip.updatedAt = formatDateTime(new Date());
+      var stepCalendarSync = syncTripCalendar_(trip);
       writeTripRow_(trip);
       appendHistory_(tripRequestId, '承認（' + (trip.currentStep - 1) + '/' + trip.totalSteps + '）', comment || '承認しました');
       return {
         success: true,
-        message: '承認しました。次の承認者（' + nextStep.stepName + '）に回りました。',
+        message: appendCalendarSyncMessage_('承認しました。次の承認者（' + nextStep.stepName + '）に回りました。', stepCalendarSync),
         trip: buildTripRequest_(tripRequestId)
       };
     }
@@ -56,11 +57,12 @@ function updateTripStatus_(tripRequestId, newStatus, comment, rejectTargetChoice
       trip.approverEmail = route.approverEmail;
       trip.rejectReason = comment;
       trip.updatedAt = formatDateTime(new Date());
+      var rejectStepCalendarSync = syncTripCalendar_(trip);
       writeTripRow_(trip);
       appendHistory_(tripRequestId, '差戻し（前ステップへ）', comment || '');
       return {
         success: true,
-        message: '差戻しました。前の承認者（' + route.stepName + '）に戻しました。',
+        message: appendCalendarSyncMessage_('差戻しました。前の承認者（' + route.stepName + '）に戻しました。', rejectStepCalendarSync),
         trip: enrichTripWithWorkflowStep_(buildTripRequest_(tripRequestId))
       };
     }
@@ -78,9 +80,10 @@ function updateTripStatus_(tripRequestId, newStatus, comment, rejectTargetChoice
     trip.currentStep = 0;
     trip.currentStepName = '';
   }
+  var calendarSync = syncTripCalendar_(trip);
   writeTripRow_(trip);
 
   var actionLabel = newStatus === TRIP_STATUS.APPROVED ? '承認' : '差戻し';
   appendHistory_(tripRequestId, actionLabel, comment || '');
-  return { success: true, message: actionLabel + 'しました。', trip: buildTripRequest_(tripRequestId) };
+  return { success: true, message: appendCalendarSyncMessage_(actionLabel + 'しました。', calendarSync), trip: buildTripRequest_(tripRequestId) };
 }

@@ -6,7 +6,8 @@ var TRIP_HEADERS = [
   '出張申請ID', '申請日', '申請者Email', '申請者名', '出張開始日', '直行', '出張終了日', '直帰',
   '出張先', '目的', '交通手段', '宿泊先', '宿泊代金', '仮払金', '備考',
   'ステータス', '精算状況', '精算ID', '承認者Email', '承認日時', '差戻し理由', '更新日時',
-  '経路ID', '現在ステップ', '総ステップ数', '現在ステップ名'
+  '経路ID', '現在ステップ', '総ステップ数', '現在ステップ名',
+  '共通カレンダーイベントID', '事業所カレンダーイベントID', 'カレンダー事業所'
 ];
 
 var TRIP_HEADER_ALIASES = {
@@ -93,7 +94,10 @@ function mapTripRow_(data, colMap) {
     routeId: String(tripCell_(data, colMap, '経路ID', '')).trim(),
     currentStep: parseInt(tripCell_(data, colMap, '現在ステップ', 0), 10) || 0,
     totalSteps: parseInt(tripCell_(data, colMap, '総ステップ数', 0), 10) || 0,
-    currentStepName: String(tripCell_(data, colMap, '現在ステップ名', '')).trim()
+    currentStepName: String(tripCell_(data, colMap, '現在ステップ名', '')).trim(),
+    sharedCalendarEventId: String(tripCell_(data, colMap, '共通カレンダーイベントID', '')).trim(),
+    officeCalendarEventId: String(tripCell_(data, colMap, '事業所カレンダーイベントID', '')).trim(),
+    calendarOffice: String(tripCell_(data, colMap, 'カレンダー事業所', '')).trim()
   };
 }
 
@@ -104,21 +108,33 @@ function tripRowToValues_(r) {
     r.destination, r.purpose, r.transport, r.lodgingDestination,
     r.lodgingCost, r.advancePayment, r.note, r.status, r.settlementStatus, r.expenseClaimId,
     r.approverEmail, r.approvedAt, r.rejectReason, r.updatedAt,
-    r.routeId || '', r.currentStep || 0, r.totalSteps || 0, r.currentStepName || ''
+    r.routeId || '', r.currentStep || 0, r.totalSteps || 0, r.currentStepName || '',
+    r.sharedCalendarEventId || '', r.officeCalendarEventId || '', r.calendarOffice || ''
   ];
+}
+
+function findSheetRowByFirstColumnId_(sheet, id) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return -1;
+  var ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  var target = String(id || '').trim();
+  for (var i = 0; i < ids.length; i++) {
+    if (String(ids[i][0] || '').trim() === target) return i + 2;
+  }
+  return -1;
 }
 
 function writeTripRow_(trip) {
   var sheet = getSpreadsheet_().getSheetByName(SHEET_TRIPS) || getSpreadsheet_().insertSheet(SHEET_TRIPS);
   ensureHeaders_(sheet, TRIP_HEADERS);
-  var all = readTripRows_();
-  var idx = -1;
-  for (var i = 0; i < all.length; i++) {
-    if (all[i].tripRequestId === trip.tripRequestId) { idx = i; break; }
+  var values = tripRowToValues_(trip);
+  var rowIndex = findSheetRowByFirstColumnId_(sheet, trip.tripRequestId);
+  if (rowIndex > 0) {
+    sheet.getRange(rowIndex, 1, 1, TRIP_HEADERS.length).setValues([values]);
+    return;
   }
-  if (idx >= 0) all[idx] = trip;
-  else all.push(trip);
-  writeAllTripRows_(sheet, all);
+  var nextRow = Math.max(sheet.getLastRow(), 1) + 1;
+  sheet.getRange(nextRow, 1, 1, TRIP_HEADERS.length).setValues([values]);
 }
 
 function writeAllTripRows_(sheet, rows) {

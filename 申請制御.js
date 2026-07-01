@@ -99,13 +99,14 @@ function saveTripRequest(payload, submit) {
     currentStepName: isSubmit ? wf.currentStepName : (existing ? existing.currentStepName : '')
   };
 
+  var calendarSync = syncTripCalendar_(trip);
   writeTripRow_(trip);
   appendHistory_(tripRequestId, isSubmit ? '申請' : '下書き保存', '');
 
   return {
     success: true,
     tripRequestId: tripRequestId,
-    message: isSubmit ? '出張申請を提出しました。' : '下書きを保存しました。',
+    message: appendCalendarSyncMessage_(isSubmit ? '出張申請を提出しました。' : '下書きを保存しました。', calendarSync),
     trip: buildTripRequest_(tripRequestId)
   };
 }
@@ -117,6 +118,7 @@ function deleteTripRequest(tripRequestId) {
   if (trip.applicantEmail !== userEmail) return { success: false, message: '削除権限がありません。' };
   if (trip.status !== TRIP_STATUS.DRAFT) return { success: false, message: '下書きのみ削除できます。' };
 
+  deleteTripCalendarEvents_(trip);
   var all = readTripRows_(function(r) { return r.tripRequestId !== tripRequestId; });
   writeAllTripRows_(getSpreadsheet_().getSheetByName(SHEET_TRIPS), all);
   appendHistory_(tripRequestId, '削除', '');
@@ -135,9 +137,10 @@ function cancelTripRequest(tripRequestId) {
 
   trip.status = TRIP_STATUS.CANCELLED;
   trip.updatedAt = formatDateTime(new Date());
+  var calendarSync = syncTripCalendar_(trip);
   writeTripRow_(trip);
   appendHistory_(tripRequestId, '取消', '');
-  return { success: true, message: '出張申請を取り消しました。' };
+  return { success: true, message: appendCalendarSyncMessage_('出張申請を取り消しました。', calendarSync) };
 }
 
 function withdrawTripRequest(tripRequestId) {
@@ -157,9 +160,10 @@ function withdrawTripRequest(tripRequestId) {
   trip.totalSteps = 0;
   trip.currentStepName = '';
   trip.updatedAt = formatDateTime(new Date());
+  var calendarSync = syncTripCalendar_(trip);
   writeTripRow_(trip);
   appendHistory_(tripRequestId, '取り下げ', '');
-  return { success: true, message: '申請を取り下げました。' };
+  return { success: true, message: appendCalendarSyncMessage_('申請を取り下げました。', calendarSync) };
 }
 
 function listMyTripRequests() {

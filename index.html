@@ -213,6 +213,36 @@
     updateDirectReturnUI();
   }
 
+  function pad2(n) {
+    return String(n).padStart(2, '0');
+  }
+
+  function parseLocalDateTime(date, time) {
+    var m = String(date || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    var t = String(time || '09:00').match(/^(\d{2}):(\d{2})$/);
+    if (!m || !t) return null;
+    return new Date(
+      parseInt(m[1], 10),
+      parseInt(m[2], 10) - 1,
+      parseInt(m[3], 10),
+      parseInt(t[1], 10),
+      parseInt(t[2], 10),
+      0
+    );
+  }
+
+  function setTripEndOneHourAfterStart() {
+    var startDate = document.getElementById('tripStartDate').value;
+    var startTime = document.getElementById('tripStartTime').value || '09:00';
+    var start = parseLocalDateTime(startDate, startTime);
+    if (!start) return;
+
+    var end = new Date(start.getTime() + 60 * 60 * 1000);
+    document.getElementById('tripEndDate').value =
+      end.getFullYear() + '-' + pad2(end.getMonth() + 1) + '-' + pad2(end.getDate());
+    document.getElementById('tripEndTime').value = pad2(end.getHours()) + ':' + pad2(end.getMinutes());
+  }
+
   function updateDirectDepartUI() {
     var checked = document.getElementById('directDepart').checked;
     document.getElementById('tripStartParts').classList.toggle('time-hidden', checked);
@@ -228,6 +258,8 @@
   function bindDirectTripFlags() {
     document.getElementById('directDepart').onchange = updateDirectDepartUI;
     document.getElementById('directReturn').onchange = updateDirectReturnUI;
+    document.getElementById('tripStartDate').onchange = setTripEndOneHourAfterStart;
+    document.getElementById('tripStartTime').onchange = setTripEndOneHourAfterStart;
     updateDirectDepartUI();
     updateDirectReturnUI();
   }
